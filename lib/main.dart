@@ -29,10 +29,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
   final esp = EspHomeController(
-    url: 'http://192.168.178.93',
+    url: 'http://192.168.178.200',
     username: 'admin',
     password: 'admin',
   );
@@ -48,19 +46,40 @@ class _MyHomePageState extends State<MyHomePage> {
       body: StreamBuilder<EspHomeControllerState>(
         stream: esp.controllerState,
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final data = snapshot.data as EspHomeControllerState;
-            return AnimatedOpacity(
-              opacity: data == EspHomeControllerState.connected ? 1 : 0.5,
-              duration: const Duration(milliseconds: 512),
-              curve: Curves.easeInOut,
-              child: espStatesList,
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+          final data = esp.staticState;
+
+          return Stack(
+            children: [
+              AnimatedOpacity(
+                opacity: data == EspHomeControllerState.connected ? 1 : 0.5,
+                duration: const Duration(milliseconds: 512),
+                curve: Curves.easeInOut,
+                child: espStatesList,
+              ),
+              Align(
+                alignment: Alignment.topRight,
+                child: Text(
+                  data.toString(),
+                  style: const TextStyle(fontSize: 8),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 512),
+                  curve: Curves.easeInOut,
+                  height: data == EspHomeControllerState.connected ? 0 : 64,
+                  child: Container(
+                    height: 64,
+                    color: Colors.amber,
+                    child: Center(
+                      child: Text(data.toString()),
+                    )
+                  ),
+                ),
+              ),
+            ],
+          );
         },
       ),
     );

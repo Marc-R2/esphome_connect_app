@@ -1,0 +1,89 @@
+workflows:
+  googleplay-internal:
+    name: GooglePlay Internal
+    max_build_duration: 30
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - google_cloud_service
+      android_signing:
+        - esphome-connect_sign_key
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*intern'
+          include: true
+          source: true
+      tag_patterns:
+        - pattern: '*Intern'
+          include: true
+    scripts:
+      - flutter packages pub get
+      - |
+        buildNr=$(($PROJECT_BUILD_NUMBER + 0))
+
+        month=$(date +%m)
+        name="0.$month.$buildNr"
+        echo "Version buildNr: $buildNr"
+        echo "Version name: $name"
+        flutter build appbundle --release --build-number=$((buildNr+0)) --build-name="$name"
+
+    artifacts:
+      - build/**/outputs/apk/**/*.apk
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - '*.snap'
+      - build/windows/**/*.msix
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - marc.renken@bitbot.eu
+      google_play:
+        credentials: $GCLOUD_CREDS
+        track: internal
+        in_app_update_priority: 0
+
+  testFlight:
+    name: Publish to TestFlight
+    max_build_duration: 30
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*beta'
+          include: true
+          source: true
+      tag_patterns:
+        - pattern: '*Beta'
+          include: true
+    environment:
+      flutter: stable
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: eu.bitbot.esphomeconnect
+    integrations:
+      app_store_connect: 'BitBot UG Apple Appstore connect (Dev)'
+    scripts:
+      - script: xcode-project use-profiles
+      - script: flutter packages pub get
+      - name: Flutter build ipa
+        script: |
+          buildNr=$(($PROJECT_BUILD_NUMBER + 0))
+          
+          month=$(date +%m)
+          name="0.$month.$buildNr"
+          echo "Version buildNr: $buildNr"
+          echo "Version name: $name"
+          flutter build ipa --export-options-plist=/Users/builder/export_options.plist --release --build-number=$((buildNr+0)) --build-name="$name"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - marc.renken@bitbot.eu
+      app_store_connect:
+        auth: integration

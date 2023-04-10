@@ -37,6 +37,7 @@ flutter_icons:
     generate: true
     icon_size: 48 # min:48, max:256, default: 48
   macos:
+    image_path: "assets/512w/icon_patch.png"
     generate: true
 
 flutter:

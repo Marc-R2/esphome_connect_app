@@ -9,7 +9,7 @@ workflows:
       groups:
         - google_cloud_service
       android_signing:
-        - esphome-connect_sign_key
+        - esphome-connect
     triggering:
       events:
         - push
